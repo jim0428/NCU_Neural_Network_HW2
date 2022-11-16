@@ -51,7 +51,7 @@ class simulator:
 
     def start(self,window,canvas,f_plot,feature_len,rbfModel,front_distance,right_distance,left_distance):
         # [前,右,左] 
-        current_pos =[[self.car_x,self.car_y]]
+        four_dimension,six_dimension = [],[]
         while(self.car_y + 3 < 37):
             #print(the,theta)
             #前方感測器
@@ -83,9 +83,10 @@ class simulator:
             #動畫畫圖
             self.plot(canvas,f_plot)
 
-            current_pos.append([self.car_x,self.car_y])
-            #print('----------------------------------------')
-        return current_pos
+            four_dimension.append([front_sensor_dis,right_sensor_dis,left_sensor_dis,F])
+            six_dimension.append([self.car_x,self.car_y,front_sensor_dis,right_sensor_dis,left_sensor_dis,F])
+
+        return four_dimension,six_dimension
 
     def plot(self,canvas,f_plot):
         f_plot.scatter(self.car_x,self.car_y)

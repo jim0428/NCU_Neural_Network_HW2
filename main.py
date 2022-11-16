@@ -59,27 +59,32 @@ def predict_data(epochs,learning_rate):
     
     rbfModel = model(epochs,learning_rate,m,sigma,len(x_train[0]))
     rbfModel.train(x_train,y_train)
-    return 1
-    #print(rbfModel.predict(np.array([19.0,  5.48528137,  5.48528137])))
+
 
 
 def print_result(window,canvas,front_distance,right_distance,left_distance):
     simu = simulator(0,0,90)
-    simu.start(window,canvas,f_plot,feature_len,rbfModel,front_distance,right_distance,left_distance)
+    four_dimension,six_dimension = simu.start(window,canvas,f_plot,feature_len,rbfModel,front_distance,right_distance,left_distance)
+    if feature_len == 3:
+        save_4d_result(four_dimension)
+    else:
+        save_6d_result(six_dimension)
 
-
-def save_4d_result(state_list, action_list):
+def save_4d_result(four_dimension):
     file = open("4d_result.txt", "w")
-    for i in range(len(action_list)):
-        str = ""
-        file.write(f"{state_list[i]} {action_list[i][0]-40}\n")
+    for i in range(len(four_dimension)):
+        for k in range(len(four_dimension[i])):
+            file.write(f"{four_dimension[i][k]} ")
+        file.write(f"\n")
     file.close
 
-def save_6d_result(position_list, state_list, action_list):
+def save_6d_result(six_dimension):
     file = open("6d_result.txt", "w")
-    for i in range(len(action_list)):
-        file.write(f"{position_list[i]} {state_list[i]} {action_list[i][0]-40}\n")
-    file.close()
+    for i in range(len(six_dimension)):
+        for k in range(len(six_dimension[i])):
+            file.write(f"{six_dimension[i][k]} ")
+        file.write(f"\n")
+    file.close
 
 def get_file_url(file_name):
     global file_url 
@@ -97,13 +102,7 @@ def main():
     plot_view.place(x=300,y=20)
     canvas = FigureCanvasTkAgg(f, plot_view)
     canvas.get_tk_widget().pack(side=tk.RIGHT, expand=1)
-
-    # result_view = tk.Frame(window, height=100, width=100)
-    # result_view.place(x=60,y=200)
-    # scrollbar = tk.Scrollbar(result_view)               # 將 Frame 裡放入 Scrollbar
-    # scrollbar.pack(side="left", fill='y',expand=1)        # 設定位置在右側，垂直填滿
     
-
     window.geometry("1000x500+200+300")
 
     window.title('類神經網路-作業二')

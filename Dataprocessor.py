@@ -18,7 +18,9 @@ class Dataprocessor:
 
             self.x_train = np.array(self.x_train)
             self.y_train = np.array(self.y_train)
-            self.y_train = (self.y_train - np.amin(self.y_train)) / (np.amax(self.y_train) - np.amin(self.y_train))
+            self.y_train = (self.y_train - np.amin(self.y_train)) / (np.amax(self.y_train) - np.amin(self.y_train))    
+        f.close()
+        
         return self.x_train,self.y_train
 
     def readfile(url):
