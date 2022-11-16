@@ -28,7 +28,7 @@ class model():
 
         return active,F
 
-    def train(self,x_train,y_train):
+    def train(self,x_train,y_train,window,epoch_setter,loss_setter):
         for i in range(1,self.epochs + 1):
             loss_sum = 0
             for data,label in zip(x_train,y_train):
@@ -56,3 +56,6 @@ class model():
                 print(loss_sum)
                 print("sum(loss_sum) / len(loss_sum)",loss_sum / len(x_train))   
                 print("------") 
+                epoch_setter.set(str(i))
+                loss_setter.set(str(loss_sum / len(x_train)))
+                window.update()

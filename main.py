@@ -48,7 +48,7 @@ def draw_track(f,canvas,route_name):
     canvas.draw()
 
    
-def predict_data(epochs,learning_rate):
+def predict_data(epochs,learning_rate,window,epoch,loss):
     global rbfModel,feature_len,y_train
     dataprocessor = Dataprocessor()
     x_train,y_train = dataprocessor.splitFile(file_url)
@@ -58,7 +58,7 @@ def predict_data(epochs,learning_rate):
     print(m,sigma)
     
     rbfModel = model(epochs,learning_rate,m,sigma,len(x_train[0]))
-    rbfModel.train(x_train,y_train)
+    rbfModel.train(x_train,y_train,window,epoch,loss)
 
 
 
@@ -73,17 +73,15 @@ def print_result(window,canvas,front_distance,right_distance,left_distance):
 def save_4d_result(four_dimension):
     file = open("4d_result.txt", "w")
     for i in range(len(four_dimension)):
-        for k in range(len(four_dimension[i])):
-            file.write(f"{four_dimension[i][k]} ")
-        file.write(f"\n")
+        towrite = ' '.join(str(item) for item in four_dimension[i])
+        file.write(f"{towrite}\n")
     file.close
 
 def save_6d_result(six_dimension):
     file = open("6d_result.txt", "w")
     for i in range(len(six_dimension)):
-        for k in range(len(six_dimension[i])):
-            file.write(f"{six_dimension[i][k]} ")
-        file.write(f"\n")
+        towrite = ' '.join(str(item) for item in six_dimension[i])
+        file.write(f"{towrite}\n")
     file.close
 
 def get_file_url(file_name):
@@ -135,26 +133,40 @@ def main():
     learning_rate = tk.Entry(window)
     learning_rate.place(x = 120,y = 110)
 
+    epoch = tk.StringVar() 
+    epoch.set('')            
+    tk.Label(window, text='epoch:').place(x = 20,y = 200)
+    tk.Label(window, textvariable=epoch).place(x=120, y=200)
+
+    loss = tk.StringVar() 
+    loss.set('')            
+    tk.Label(window, text='loss:').place(x = 20,y = 230)
+    tk.Label(window, textvariable=loss).place(x=120, y=230)
+
+
     #開始預測資料
     tk.Button(window, text='Train',command= lambda: predict_data(
             int(interation.get()),
-            float(learning_rate.get())
+            float(learning_rate.get()),
+            window,
+            epoch,
+            loss
     )).place(x = 120,y = 140)
 
     front_distance = tk.StringVar() 
     front_distance.set('')            
-    tk.Label(window, text='前方感測器距離:').place(x = 20,y = 200)
-    tk.Label(window, textvariable=front_distance).place(x=120, y=200)
+    tk.Label(window, text='前方感測器距離:').place(x = 20,y = 260)
+    tk.Label(window, textvariable=front_distance).place(x=120, y=260)
 
     right_distance = tk.StringVar() 
     right_distance.set('')
-    tk.Label(window, text='右方感測器距離:').place(x = 20,y = 230)
-    tk.Label(window, textvariable=right_distance).place(x=120, y=230)
+    tk.Label(window, text='右方感測器距離:').place(x = 20,y = 290)
+    tk.Label(window, textvariable=right_distance).place(x=120, y=290)
 
     left_distance = tk.StringVar() 
     left_distance.set('')
-    tk.Label(window, text='左方感測器距離:').place(x = 20,y = 260)
-    tk.Label(window, textvariable=left_distance).place(x=120, y=260)
+    tk.Label(window, text='左方感測器距離:').place(x = 20,y = 320)
+    tk.Label(window, textvariable=left_distance).place(x=120, y=320)
 
 
     tk.Button(window, text='Start', command= lambda: print_result(window,canvas,front_distance,right_distance,left_distance)).place(x = 120,y = 170)
