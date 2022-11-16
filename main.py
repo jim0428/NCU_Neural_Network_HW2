@@ -59,18 +59,13 @@ def predict_data(epochs,learning_rate):
     
     rbfModel = model(epochs,learning_rate,m,sigma,len(x_train[0]))
     rbfModel.train(x_train,y_train)
+    return 1
     #print(rbfModel.predict(np.array([19.0,  5.48528137,  5.48528137])))
 
 
-def print_result(f,canvas):
+def print_result(window,canvas,front_distance,right_distance,left_distance):
     simu = simulator(0,0,90)
-    car_pos = simu.check_collision(feature_len,rbfModel)
-    for pos in car_pos:
-        f_plot.scatter(pos[0],pos[1])
-        circle = patches.Circle((pos[0],pos[1]), radius=3, fill=False, color="g")
-        f_plot.add_patch(circle)
-    canvas.draw()
-
+    simu.start(window,canvas,f_plot,feature_len,rbfModel,front_distance,right_distance,left_distance)
 
 
 def save_4d_result(state_list, action_list):
@@ -107,7 +102,7 @@ def main():
     # result_view.place(x=60,y=200)
     # scrollbar = tk.Scrollbar(result_view)               # 將 Frame 裡放入 Scrollbar
     # scrollbar.pack(side="left", fill='y',expand=1)        # 設定位置在右側，垂直填滿
-
+    
 
     window.geometry("1000x500+200+300")
 
@@ -145,10 +140,26 @@ def main():
     tk.Button(window, text='Train',command= lambda: predict_data(
             int(interation.get()),
             float(learning_rate.get())
-    )).place(x = 80,y = 140)
+    )).place(x = 120,y = 140)
+
+    front_distance = tk.StringVar() 
+    front_distance.set('')            
+    tk.Label(window, text='前方感測器距離:').place(x = 20,y = 200)
+    tk.Label(window, textvariable=front_distance).place(x=120, y=200)
+
+    right_distance = tk.StringVar() 
+    right_distance.set('')
+    tk.Label(window, text='右方感測器距離:').place(x = 20,y = 230)
+    tk.Label(window, textvariable=right_distance).place(x=120, y=230)
+
+    left_distance = tk.StringVar() 
+    left_distance.set('')
+    tk.Label(window, text='左方感測器距離:').place(x = 20,y = 260)
+    tk.Label(window, textvariable=left_distance).place(x=120, y=260)
 
 
-    tk.Button(window, text='Start', command= lambda: print_result(f,canvas)).place(x = 80,y = 170)
+    tk.Button(window, text='Start', command= lambda: print_result(window,canvas,front_distance,right_distance,left_distance)).place(x = 120,y = 170)
+
 
 
     window.mainloop()

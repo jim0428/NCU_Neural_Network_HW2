@@ -1,8 +1,10 @@
 import numpy as np
 from sympy import Point,Segment
 import math
+import matplotlib.patches as patches
 
 from RBFN import * 
+
 
 class simulator:
     def __init__(self,car_x,car_y,phi) -> None:
@@ -24,7 +26,7 @@ class simulator:
     def get_intersection(self,sensor):
         p1,p2 = Point(self.car_x,self.car_y), Point(sensor[0],sensor[1])        
         l1 = Segment(p1, p2)
-        min_point,min_distance = Point(0,0),float('inf')
+        min_distance = float('inf')
         for i in range(1,len(self.coordination)):
             
             p3, p4 = Point(self.coordination[i - 1][0], self.coordination[i - 1][1]),\
@@ -40,7 +42,6 @@ class simulator:
                 distance = p1.distance(intersection)
                 min_distance = min(min_distance,distance)
 
-
         return min_distance
 
     def update(self,theta):
@@ -48,7 +49,7 @@ class simulator:
         self.car_y = self.car_y + np.sin(np.radians(self.phi + theta)) - (np.sin(np.radians(theta)) * np.cos(np.radians(self.phi)))
         self.phi = self.phi - (np.arcsin(2 * np.sin(np.radians(theta)) / self.b) * 57.295779513)
 
-    def check_collision(self,feature_len,rbfModel):
+    def start(self,window,canvas,f_plot,feature_len,rbfModel,front_distance,right_distance,left_distance):
         # [前,右,左] 
         current_pos =[[self.car_x,self.car_y]]
         while(self.car_y + 3 < 37):
@@ -56,23 +57,38 @@ class simulator:
             #前方感測器
             front_sensor_vec = self.rotate(self.phi)
             front_sensor_dis = self.get_intersection(front_sensor_vec)
-            #print("front:",front_sensor_point)
+
             #右方感測器
             right_sensor_vec = self.rotate(self.phi - 45)
             right_sensor_dis = self.get_intersection(right_sensor_vec)
-            #print("right",right_sensor_point)
+
             #左方感測器
             left_sensor_vec = self.rotate(self.phi + 45)
             left_sensor_dis = self.get_intersection(left_sensor_vec)
-            #print(np.array([float(front_sensor_dis),float(right_sensor_dis),float(left_sensor_dis)]))
+
             if(feature_len == 3):
                 _,F = rbfModel.predict(np.array([float(front_sensor_dis),float(right_sensor_dis),float(left_sensor_dis)]))
             if(feature_len == 5):
                 _,F = rbfModel.predict(np.array([float(self.car_x),float(self.car_y),float(front_sensor_dis),float(right_sensor_dis),float(left_sensor_dis)]))
             F = F * 80 - 40
-            #print("left",left_sensor_point)
+            
             self.update(F)
             print(self.car_x,self.car_y,self.phi)
+
+            front_distance.set(str(front_sensor_dis))
+            right_distance.set(str(right_sensor_dis))
+            left_distance.set(str(left_sensor_dis))
+            window.update()
+
+            #動畫畫圖
+            self.plot(canvas,f_plot)
+
             current_pos.append([self.car_x,self.car_y])
             #print('----------------------------------------')
         return current_pos
+
+    def plot(self,canvas,f_plot):
+        f_plot.scatter(self.car_x,self.car_y)
+        circle = patches.Circle((self.car_x,self.car_y), radius=3,linewidth=0.5, fill=False, color="g")
+        f_plot.add_patch(circle)
+        canvas.draw()
