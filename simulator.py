@@ -9,7 +9,7 @@ class simulator:
         self.car_x = car_x
         self.car_y = car_y
         self.phi = phi
-        self.b = 6
+        self.b = 3
         self.coordination = np.array([
             [-6,-3],[-6,22],[18,22],[18,50],[30,50],[30,10],[6,10],[6,-3],[-6,-3]
         ])
@@ -48,9 +48,9 @@ class simulator:
         self.car_y = self.car_y + np.sin(np.radians(self.phi + theta)) - (np.sin(np.radians(theta)) * np.cos(np.radians(self.phi)))
         self.phi = self.phi - (np.arcsin(2 * np.sin(np.radians(theta)) / self.b) * 57.295779513)
 
-    def check_collision(self,y_train,rbfModel):
+    def check_collision(self,feature_len,rbfModel):
         # [前,右,左] 
-        current_pos =[]
+        current_pos =[[self.car_x,self.car_y]]
         while(self.car_y + 3 < 37):
             #print(the,theta)
             #前方感測器
@@ -65,12 +65,14 @@ class simulator:
             left_sensor_vec = self.rotate(self.phi + 45)
             left_sensor_dis = self.get_intersection(left_sensor_vec)
             #print(np.array([float(front_sensor_dis),float(right_sensor_dis),float(left_sensor_dis)]))
-
-            _,F = rbfModel.predict(np.array([float(front_sensor_dis),float(right_sensor_dis),float(left_sensor_dis)]))
+            if(feature_len == 3):
+                _,F = rbfModel.predict(np.array([float(front_sensor_dis),float(right_sensor_dis),float(left_sensor_dis)]))
+            if(feature_len == 5):
+                _,F = rbfModel.predict(np.array([float(self.car_x),float(self.car_y),float(front_sensor_dis),float(right_sensor_dis),float(left_sensor_dis)]))
             F = F * 80 - 40
             #print("left",left_sensor_point)
             self.update(F)
             print(self.car_x,self.car_y,self.phi)
-            current_pos.append([self.car_x - 1,self.car_y - 1])
+            current_pos.append([self.car_x,self.car_y])
             #print('----------------------------------------')
         return current_pos

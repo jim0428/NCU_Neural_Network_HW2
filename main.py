@@ -6,27 +6,26 @@ from RBFN import model
 from KMeans import KMeans
 from simulator import simulator
 
-from simple_playground import *
-
-import time 
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.patches as patches
 
-# import sympy and Point, Line
-from sympy import Point, Line
 
-def openfile():
+def openfile(route_name):
     dataset_url = filedialog.askopenfilename(title="Select file")
+    route_name.set(dataset_url.split('/')[-1])
+
     return dataset_url
 
-def draw_track(f,canvas):
+def draw_track(f,canvas,route_name):
     global car_x,car_y,phi,final_coordinate,f_plot
+
+
     f.clear()
     f_plot = f.add_subplot(111)
     f_plot.clear()
 
-    track_data = Dataprocessor.readfile(openfile())
+    track_data = Dataprocessor.readfile(openfile(route_name))
     track_data = [data.strip().split(',') for data in track_data]
     track_data = Dataprocessor.text_to_numlist(track_data)
 
@@ -49,8 +48,6 @@ def draw_track(f,canvas):
     canvas.draw()
 
    
-
-
 def predict_data(epochs,learning_rate):
     global rbfModel,feature_len,y_train
     dataprocessor = Dataprocessor()
@@ -67,7 +64,7 @@ def predict_data(epochs,learning_rate):
 
 def print_result(f,canvas):
     simu = simulator(0,0,90)
-    car_pos = simu.check_collision(y_train,rbfModel)
+    car_pos = simu.check_collision(feature_len,rbfModel)
     for pos in car_pos:
         f_plot.scatter(pos[0],pos[1])
         circle = patches.Circle((pos[0],pos[1]), radius=3, fill=False, color="g")
@@ -99,14 +96,18 @@ def get_file_url(file_name):
 
 def main():
     window = tk.Tk()
-    # canvas = tk.Canvas(window, bg='white', height=200, width=200)
-    # canvas.pack()
-    f = Figure(figsize=(5, 4), dpi=100)
 
-    test = tk.Frame(window)
-    test.place(x=300,y=20)
-    canvas = FigureCanvasTkAgg(f, test)
+    f = Figure(figsize=(5, 4), dpi=100)
+    plot_view = tk.Frame(window)
+    plot_view.place(x=300,y=20)
+    canvas = FigureCanvasTkAgg(f, plot_view)
     canvas.get_tk_widget().pack(side=tk.RIGHT, expand=1)
+
+    # result_view = tk.Frame(window, height=100, width=100)
+    # result_view.place(x=60,y=200)
+    # scrollbar = tk.Scrollbar(result_view)               # 將 Frame 裡放入 Scrollbar
+    # scrollbar.pack(side="left", fill='y',expand=1)        # 設定位置在右側，垂直填滿
+
 
     window.geometry("1000x500+200+300")
 
@@ -115,15 +116,20 @@ def main():
     file_name = tk.StringVar()   # 設定 text 為文字變數
     file_name.set('')            # 設定 text 的內容
 
+    route_name = tk.StringVar()   # 設定 text 為文字變數
+    route_name.set('')            # 設定 text 的內容    
+
     tk.Label(window, text='輸入訓練資料').place(x = 20,y = 20)
 
     tk.Button(window, text='選擇檔案',command= lambda: get_file_url(file_name)).place(x = 120,y = 16)
 
     tk.Label(window, text='地圖資料路徑').place(x = 20,y = 50)
 
-    tk.Button(window, text='選擇檔案', command= lambda: draw_track(f,canvas)).place(x = 120,y = 50)
+    tk.Button(window, text='選擇檔案', command= lambda: draw_track(f,canvas,route_name)).place(x = 120,y = 50)
 
     tk.Label(window, textvariable=file_name).place(x=180, y=20)
+
+    tk.Label(window, textvariable=route_name).place(x=180, y=50)
 
     #輸入迭代次數
     tk.Label(window, text='Epoch:').place(x = 20,y = 80)
