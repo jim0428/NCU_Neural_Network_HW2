@@ -4,6 +4,7 @@ from tkinter import filedialog
 from Dataprocessor import Dataprocessor
 from RBFN import model
 from KMeans import KMeans
+from simulator import simulator
 
 from simple_playground import *
 
@@ -12,13 +13,16 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.patches as patches
 
+# import sympy and Point, Line
+from sympy import Point, Line
+
 def openfile():
     dataset_url = filedialog.askopenfilename(title="Select file")
     return dataset_url
 
 def draw_track(f,canvas):
-    global car_x,car_y,phi
-
+    global car_x,car_y,phi,final_coordinate,f_plot
+    f.clear()
     f_plot = f.add_subplot(111)
     f_plot.clear()
 
@@ -35,16 +39,20 @@ def draw_track(f,canvas):
         x1, y1 = data_coordinate[idx][0] , data_coordinate[idx][1]
         #畫線
         f_plot.plot([x0, x1], [y0, y1],'dodgerblue')
-
+    
+    #畫初始線
+    f_plot.plot([-6,6], [0, 0],'dodgerblue')
+        
     #畫矩形
     rect = patches.Rectangle(final_coordinate[0], final_coordinate[1][0] - final_coordinate[0][0], final_coordinate[1][1] - final_coordinate[0][1], fill=True, edgecolor = 'dodgerblue',linewidth = 0)
     f_plot.add_patch(rect)
     canvas.draw()
 
-    canvas.draw()
+   
+
 
 def predict_data(epochs,learning_rate):
-    global rbfModel,feature_len
+    global rbfModel,feature_len,y_train
     dataprocessor = Dataprocessor()
     x_train,y_train = dataprocessor.splitFile(file_url)
     feature_len = len(x_train[0])
@@ -58,30 +66,15 @@ def predict_data(epochs,learning_rate):
 
 
 def print_result(f,canvas):
-    print(car_x,car_y,phi)
-    # position_list, state_list, action_list = run_example(rbfModel, feature_len)
-    # animate_ball(window, canvas, position_list, state_list)
-    # if feature_len == 4:
-    #     save_4d_result(state_list, action_list)
-    # elif feature_len == 6:
-    #     save_6d_result(position_list, state_list, action_list)
+    simu = simulator(0,0,90)
+    car_pos = simu.check_collision(y_train,rbfModel)
+    for pos in car_pos:
+        f_plot.scatter(pos[0],pos[1])
+        circle = patches.Circle((pos[0],pos[1]), radius=3, fill=False, color="g")
+        f_plot.add_patch(circle)
+    canvas.draw()
 
-def animate_ball(Window, canvas, position_list, state_list):
-    pos_x, pos_y = position_list[0].x, -position_list[0].y
-    pos_x, pos_y = float(pos_x), float(pos_y)
-    ball = canvas.create_oval(pos_x+100-3,pos_y+100-3,pos_x+100+3,pos_y+100+3,fill="Red", outline="Black", width=4)
-    for idx, position in enumerate(position_list[1:]):
-        next_x, next_y = position.x, -position.y
-        front, right, left = state_list[idx][0], state_list[idx][1], state_list[idx][2]
-        next_x, next_y = float(next_x), float(next_y)
-        xinc = next_x - pos_x
-        yinc = next_y - pos_y
-        pos_x, pos_y = next_x, next_y
-        canvas.move(ball,xinc,yinc)
-        # pos_lbl.configure(text=f"x: {position.x}, y: {position.y}")
-        # distance_lbl.configure(text=f"front: {front}, right: {right}, left: {left}")
-        Window.update()
-        time.sleep(0.2)
+
 
 def save_4d_result(state_list, action_list):
     file = open("4d_result.txt", "w")
@@ -122,31 +115,34 @@ def main():
     file_name = tk.StringVar()   # 設定 text 為文字變數
     file_name.set('')            # 設定 text 的內容
 
-    tk.Label(window, text='請選擇檔案').place(x = 20,y = 20)
+    tk.Label(window, text='輸入訓練資料').place(x = 20,y = 20)
 
     tk.Button(window, text='選擇檔案',command= lambda: get_file_url(file_name)).place(x = 120,y = 16)
+
+    tk.Label(window, text='地圖資料路徑').place(x = 20,y = 50)
+
+    tk.Button(window, text='選擇檔案', command= lambda: draw_track(f,canvas)).place(x = 120,y = 50)
 
     tk.Label(window, textvariable=file_name).place(x=180, y=20)
 
     #輸入迭代次數
-    tk.Label(window, text='Epoch:').place(x = 20,y = 50)
+    tk.Label(window, text='Epoch:').place(x = 20,y = 80)
     interation = tk.Entry(window)
-    interation.place(x = 120,y = 50)
+    interation.place(x = 120,y = 80)
 
     #學習率
-    tk.Label(window, text='Learning rate:').place(x = 20,y = 80)
+    tk.Label(window, text='Learning rate:').place(x = 20,y = 110)
     learning_rate = tk.Entry(window)
-    learning_rate.place(x = 120,y = 80)
+    learning_rate.place(x = 120,y = 110)
 
     #開始預測資料
-    tk.Button(window, text='確認',command= lambda: predict_data(
+    tk.Button(window, text='Train',command= lambda: predict_data(
             int(interation.get()),
             float(learning_rate.get())
     )).place(x = 80,y = 140)
 
-    tk.Button(window, text='select track data', command= lambda: draw_track(f,canvas)).place(x = 80,y = 170)
 
-    tk.Button(window, text='print_result', command= lambda: print_result(f,canvas)).place(x = 80,y = 200)
+    tk.Button(window, text='Start', command= lambda: print_result(f,canvas)).place(x = 80,y = 170)
 
 
     window.mainloop()
