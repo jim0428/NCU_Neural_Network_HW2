@@ -2,9 +2,9 @@ import tkinter as tk
 from tkinter import filedialog
 
 from Dataprocessor import Dataprocessor
-from RBFN import model
+from RBFN import Model
 from KMeans import KMeans
-from simulator import simulator
+from simulator import Simulator
 
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
@@ -20,7 +20,6 @@ def openfile(route_name):
 def draw_track(f,canvas,route_name):
     global car_x,car_y,phi,final_coordinate,f_plot
 
-
     f.clear()
     f_plot = f.add_subplot(111)
     f_plot.clear()
@@ -28,9 +27,11 @@ def draw_track(f,canvas,route_name):
     track_data = Dataprocessor.readfile(openfile(route_name))
     track_data = [data.strip().split(',') for data in track_data]
     track_data = Dataprocessor.text_to_numlist(track_data)
-
+    #初始點，初始角度
     car_x,car_y,phi =  track_data[0][0],track_data[0][1],track_data[0][2]
+    #初始線
     final_coordinate = track_data[1:3]
+    #賽道牆壁
     data_coordinate = track_data[3:]
 
     for idx in range(1,len(data_coordinate)):
@@ -48,7 +49,7 @@ def draw_track(f,canvas,route_name):
     canvas.draw()
 
    
-def predict_data(epochs,learning_rate,window,epoch,loss):
+def train_model(epochs,learning_rate,window,epoch,loss):
     global rbfModel,feature_len,y_train
     dataprocessor = Dataprocessor()
     x_train,y_train = dataprocessor.splitFile(file_url)
@@ -57,13 +58,11 @@ def predict_data(epochs,learning_rate,window,epoch,loss):
     m,sigma = kmeans.process()
     print(m,sigma)
     
-    rbfModel = model(epochs,learning_rate,m,sigma,len(x_train[0]))
+    rbfModel = Model(epochs,learning_rate,m,sigma,len(x_train[0]))
     rbfModel.train(x_train,y_train,window,epoch,loss)
 
-
-
 def print_result(window,canvas,front_distance,right_distance,left_distance):
-    simu = simulator(0,0,90)
+    simu = Simulator(0,0,90)
     four_dimension,six_dimension = simu.start(window,canvas,f_plot,feature_len,rbfModel,front_distance,right_distance,left_distance)
     if feature_len == 3:
         save_4d_result(four_dimension)
@@ -71,14 +70,14 @@ def print_result(window,canvas,front_distance,right_distance,left_distance):
         save_6d_result(six_dimension)
 
 def save_4d_result(four_dimension):
-    file = open("4d_result.txt", "w")
+    file = open("track4D.txt", "w")
     for i in range(len(four_dimension)):
         towrite = ' '.join(str(item) for item in four_dimension[i])
         file.write(f"{towrite}\n")
     file.close
 
 def save_6d_result(six_dimension):
-    file = open("6d_result.txt", "w")
+    file = open("track6D.txt", "w")
     for i in range(len(six_dimension)):
         towrite = ' '.join(str(item) for item in six_dimension[i])
         file.write(f"{towrite}\n")
@@ -133,19 +132,20 @@ def main():
     learning_rate = tk.Entry(window)
     learning_rate.place(x = 120,y = 110)
 
+    #顯示epoch
     epoch = tk.StringVar() 
     epoch.set('')            
     tk.Label(window, text='epoch:').place(x = 20,y = 200)
     tk.Label(window, textvariable=epoch).place(x=120, y=200)
-
+    #顯示loss
     loss = tk.StringVar() 
     loss.set('')            
     tk.Label(window, text='loss:').place(x = 20,y = 230)
     tk.Label(window, textvariable=loss).place(x=120, y=230)
 
 
-    #開始預測資料
-    tk.Button(window, text='Train',command= lambda: predict_data(
+    #開始訓練資料
+    tk.Button(window, text='Train',command= lambda: train_model(
             int(interation.get()),
             float(learning_rate.get()),
             window,

@@ -3,7 +3,7 @@ import numpy as np
 
 from KMeans import KMeans
 
-class model():
+class Model():
     def __init__(self,epochs,learning_rate,m,sigma,K):
         self.theta = 1.0
         #學習率

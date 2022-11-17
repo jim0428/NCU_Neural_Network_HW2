@@ -6,7 +6,7 @@ import matplotlib.patches as patches
 from RBFN import * 
 
 
-class simulator:
+class Simulator:
     def __init__(self,car_x,car_y,phi) -> None:
         self.car_x = car_x
         self.car_y = car_y
@@ -53,7 +53,7 @@ class simulator:
         # [前,右,左] 
         four_dimension,six_dimension = [],[]
         while(self.car_y + 3 < 37):
-            #print(the,theta)
+
             #前方感測器
             front_sensor_vec = self.rotate(self.phi)
             front_sensor_dis = self.get_intersection(front_sensor_vec)
@@ -66,6 +66,7 @@ class simulator:
             left_sensor_vec = self.rotate(self.phi + 45)
             left_sensor_dis = self.get_intersection(left_sensor_vec)
 
+
             if(feature_len == 3):
                 _,F = rbfModel.predict(np.array([float(front_sensor_dis),float(right_sensor_dis),float(left_sensor_dis)]))
             if(feature_len == 5):
@@ -75,10 +76,14 @@ class simulator:
             self.update(F)
             print(self.car_x,self.car_y,self.phi)
 
+            #更新前右左距離
             front_distance.set(str(front_sensor_dis))
             right_distance.set(str(right_sensor_dis))
             left_distance.set(str(left_sensor_dis))
             window.update()
+
+            if front_sensor_dis - 3 < 0 or right_sensor_dis - 3 < 0 or left_sensor_dis - 3 < 0:
+                break
 
             #動畫畫圖
             self.plot(canvas,f_plot)
